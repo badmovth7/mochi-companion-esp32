@@ -1,46 +1,35 @@
 # 🤖 Mochi Companion ESP32
 
-Proyek perangkat tersemat (*embedded systems*) sumber terbuka untuk membuat robot *desktop companion* interaktif yang terinspirasi dari Dasai Mochi. Perangkat ini menampilkan animasi ekspresi wajah berbasis piksel (*pixel art*) pada layar OLED dan merespons interaksi fisik secara *real-time*.
+Eksperimen bikin robot meja mini interaktif yang terinspirasi dari Dasai Mochi. Proyek ini nampilin animasi ekspresi wajah (*pixel art*) di layar OLED kecil dan bisa bereaksi saat disentuh langsung secara *real-time*.
+
+Dibangun pakai ESP32 dengan fokus pada performa rendering yang mulus, penanganan animasi *non-blocking*, dan interaktivitas simpel tanpa modul sensor tambahan.
 
 ---
 
-## 📌 Ikhtisar Proyek
+## ✨ Fitur Utama
 
-Tujuan dari proyek ini adalah mengimplementasikan sistem antarmuka grafis ringan dan responsif pada mikrokontroler berdaya rendah. Proyek ini memadukan konsep pemrograman mikrokontroler, manajemen memori aset grafis, dan *state machine* non-blocking agar animasi berjalan mulus tanpa mengorbankan pembacaan input sensor.
-
-### Fitur Utama
-* **Non-Blocking Animation Loop:** Rendering grafis dikendalikan menggunakan penjadwalan waktu (`millis()`) sehingga transisi antar-frame berjalan stabil tanpa menggunakan fungsi `delay()`.
-* **Dynamic Facial Expressions:** Memiliki berbagai mode ekspresi (Normal/Idle, Random Blink, dan Reaksi Sentuh).
-* **Capacitive Touch Input:** Memanfaatkan pin sentuh kapasitif bawaan ESP32 untuk mendeteksi interaksi fisik tanpa memerlukan modul sensor eksternal.
-* **Flash Memory Optimization:** Seluruh aset bitmap/sprite disimpan langsung pada memori Flash (`PROGMEM`) untuk menghemat konsumsi SRAM mikrokontroler.
+* **Smooth Animation (Non-Blocking):** Rendering frame diatur pakai `millis()` (finite state machine), jadi transisi ekspresi tetap mulus tanpa bikin mikrokontroler nge-*freeze*.
+* **Dynamic Expressions:** Animasi mata ngedip acak saat mode *idle*, dan otomatis berubah ekspresi (kaget / senang) saat disentuh.
+* **Built-in Touch Detection:** Memanfaatkan fitur *Capacitive Touch* bawaan ESP32 di GPIO 4—cukup sentuh kabel jumper langsung bereaksi tanpa perlu beli modul sensor sentuh terpisah.
+* **Hemat Memori (PROGMEM):** Seluruh aset bitmap disimpan langsung di Flash memory mikrokontroler biar konsumsi RAM tetap ringan.
 
 ---
 
-## 🛠️ Kebutuhan Hardware & Pinout
+## 🔌 Skema Wiring (Pinout)
 
-### Komponen
-* **ESP32 DevKit V1** (Mikrokontroler utama)
-* **OLED Display 0.96" I2C (Driver SSD1306, 128x64 piksel)**
-* **Kabel jumper (Female-to-Female)**
-* **Kabel USB (Data & Power)**
-
-### Skema Sambungan (Wiring)
-
-Komunikasi layar menggunakan antarmuka serial I2C standar pada ESP32:
+Koneksi display OLED SSD1306 (I2C) ke board ESP32:
 
 | Pin OLED SSD1306 | Pin ESP32 | Keterangan |
 | :--- | :--- | :--- |
-| **VCC** | **3V3** | Sumber tegangan 3.3V |
-| **GND** | **GND** | Ground sirkuit |
-| **SCL** | **GPIO 22** | I2C Clock Bus |
-| **SDA** | **GPIO 21** | I2C Data Bus |
-| *(Kabel Sentuh)* | **GPIO 4 (Touch0)** | Elektroda input sentuhan kapasitif |
+| **VCC** | **3V3** | Power 3.3V |
+| **GND** | **GND** | Ground |
+| **SCL** | **GPIO 22** | I2C Clock |
+| **SDA** | **GPIO 21** | I2C Data |
+| *(Kabel jumper)* | **GPIO 4 (Touch0)** | Sensor sentuh (cukup sentuh ujung kabel) |
 
 ---
 
-## 🧠 Arsitektur Sistem & State Machine
-
-Siklus animasi berjalan dengan alur *Finite State Machine* (FSM) berikut:
+## 🧠 Alur Animasi (State Machine)
 
 ```text
        +---------------------------------------------+
@@ -49,7 +38,7 @@ Siklus animasi berjalan dengan alur *Finite State Machine* (FSM) berikut:
 [ STATE: IDLE ] --(Interval acak 3-5 detik)--> [ STATE: BLINK ]
        |                                             ^
        |                                             |
- (Sentuhan terdeteksi pada GPIO 4)                   |
+ (Sentuhan di GPIO 4)                                |
        |                                             |
        v                                             |
-[ STATE: REACTION (Surprised/Happy) ] --(2 detik)----+
+[ STATE: REACTION (Happy/Surprised) ] --(2 detik)----+
